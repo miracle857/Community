@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.briup.run.dao.IMemberDao">
+	<!-- 保存新用户 -->
+	<insert id="saveMemberinfo" parameterType="Memberinfo">
+		<selectKey keyProperty="id" resultType="Long" order="BEFORE">
+			select
+			memberinfo_sequ.nextval from dual
+		</selectKey>
+		insert into
+		memberinfo(id,nickname,password,email,passwordquestion,passwordanswer,gender,recommender,provincecity,age,phone,address,point,registerdate)
+		values(#{id},#{nickname},#{password},#{email},#{passwordquestion},#{passwordanswer},#{gender},#{recommender},#{provincecity},#{age},#{phone},#{address},#{point},#{registerdate})
+	</insert>
+	<!-- 更新用户 -->
+	<!-- <update id="updateMemberinfo" parameterType="Memberinfo"> update memberinfo 
+		set point=#{point},latestdate=#{latestdate},status=#{status} where id=#{id} 
+		</update> -->
+	<update id="updateMemberinfo" parameterType="Memberinfo">
+		update memberinfo set
+		gender=#{gender},email=#{email},provincecity=#{provincecity},address=#{address},phone=#{phone},passwordquestion=#{passwordquestion},passwordanswer=#{passwordanswer}
+		<if test="latestdate !=null">
+			,latestdate=#{latestdate}
+		</if>
+		<if test="nickname!=null">
+			,nickname=#{nickname}
+		</if>
+		<if test="password!=null">
+			,password=#{password}
+		</if>
+		<if test="age!=null">
+			,age=#{age}
+		</if>
+		<if test="graderecord!=null">
+			,gradeid=#{graderecord.id}
+		</if>
+		<if test="point!=null">
+			,point=#{point}
+		</if>
+		where id=#{id}
+	</update>
+	<!-- 按照积分查找等级 -->
+	<select id="findMemberinfoLevel" resultType="Graderecord">
+		select * from graderecord where #{point} between minpoint and maxpoint
+	</select>
+	<!-- 保存积分记录 -->
+	<insert id="savePointrecord" parameterType="Pointrecord">
+		<selectKey keyProperty="id" resultType="Long" order="BEFORE">
+			select
+			pointrecord_sequ.nextval from dual
+		</selectKey>
+		insert into pointrecord(id,nickname,receivedate,pointactionid)
+		values(#{id},#{nickname},#{receivedate},#{pointaction.id})
+	</insert>
+	<!-- //按照积分动作查找Pointaction类 -->
+	<select id="findPointactionByPointAction" parameterType="String"
+		resultType="Pointaction">
+		select * from pointaction where
+		actionname=#{pointaction.actionname}
+	</select>
+	<!-- //按姓名查找用户 -->
+	<select id="findMemberinfoByName" parameterType="String"
+		resultType="memberinfo">
+		select * from memberinfo where nickname=#{name}
+	</select>
+	<!-- 保存个人空间 -->
+	<insert id="saveSpace" parameterType="Memberspace">
+		<selectKey keyProperty="id" resultType="Long" order="BEFORE">
+			select
+			memberspace_sequ.nextval from dual
+		</selectKey>
+		insert into
+		memberspace(id,opinion,runtime,runplace,runstar,runhabit,cellphone,icon,memberid)
+		values(#{id},#{opinion},#{runtime},#{runplace},#{runstar},#{runhabit},#{cellphone},#{icon},#{memberinfo.id})
+	</insert>
+	<!-- //查找个人空间 -->
+	<select id="findSpace" parameterType="Long" resultType="Memberspace">
+		select * from memberspace where memberid=#{id}
+	</select>
+	<!-- //查找前几名用户 -->
+	<select id="findMemberinfoByNum" resultType="Memberinfo" parameterType="int">
+		select * from memberinfo
+		where #{num} >= rownum
+		<!-- select * from (select * from memberinfo order by point desc) where #{num}>=rownum order by point desc -->
+	</select>
+	<!-- <resultMap type="memberinfo" id="memberinfoMap">
+		<id property="" column=""/>
+		<result property="" column=""/>
+	</resultMap> -->
+	<!-- //保存好友信息 -->
+	<insert id="saveFriend" parameterType="Friendrecord">
+		<selectKey keyProperty="id" resultType="Long" order="BEFORE">
+			select
+			friendrecord_sequ.nextval from dual
+		</selectKey>
+		insert into friendrecord(id,selfname,friendname)
+		values(#{id},#{selfname},#{friendname})
+	</insert>
+	<!-- //查找本人的所有好友 -->
+	<select id="listFriend" parameterType="String" resultType="Memberinfo">
+		select * from memberinfo
+		where nickname in(
+			select friendname 
+			from friendrecord 
+			where selfname=#{selfname})
+	</select>
+</mapper>
